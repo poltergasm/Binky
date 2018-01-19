@@ -8,6 +8,15 @@ Platforms = {}
 
 MainGame = px.Module:extends()
 
+function MainGame:add_platform_row(y, row)
+  for j,n in ipairs(row) do
+    if n == 1 then
+      local platform = EntityPlatform((j-1)*32, (y-1)*32)
+      Platforms[#Platforms + 1] = platform
+    end
+  end
+end
+
 function MainGame:get_row()
   local row = {}
   for x = 1, 8 do
@@ -30,11 +39,9 @@ function MainGame:load_map()
     self.map[i] = self:get_row()
   end
   
-  local yrow = 0
   for i,row in ipairs(self.map) do
     --print(row)
     if type(row) == "table" then
-      yrow = yrow + 32
       for j,n in ipairs(row) do
         if n == 1 then
           local platform = EntityPlatform((j-1)*32, (i-1)*32)
@@ -49,6 +56,7 @@ function MainGame:load_map()
 end
 
 function MainGame:init()
+  math.randomseed(os.time())
   local music = love.audio.newSource("assets/audio/bgm/Happy.mp3", true)
   music:play()
   love.graphics.setBackgroundColor(69, 186, 230)
@@ -65,8 +73,28 @@ end
 local zoom = 1
 function MainGame:update(dt)
   self.player:update(dt)
-  self.speed = self.speed + dt * (10/self.speed);
-  self.screen.y = self.screen.y + dt * self.speed;
+  self.speed = self.speed + dt * (10/self.speed)
+  self.screen.y = self.screen.y + dt * self.speed
+
+  -- new row?
+  --local need_row = self.screen.y % 400
+  print(math.floor(self.screen.y) % 400)
+  if false then
+    --self.screen.y = self.screen.y - 8
+    --for i = 1, #Platforms do
+    --  Platforms[i].pos.y = Platforms[i].pos.y + 8
+    --end
+
+    for i = 1, 8 do
+      table.remove(Platforms, i)
+    end
+    table.remove(self.map, 1)
+    local map_y = #self.map + 1
+    self.map[map_y] = self:get_row()
+    self:add_platform_row(map_y, self.map[map_y])
+
+    -- place coin?
+  end
 end
 
 function MainGame:draw()
@@ -75,7 +103,7 @@ function MainGame:draw()
   local cx,cy = love.graphics.getWidth()/(2*zoom), love.graphics.getHeight()/(2*zoom)
   love.graphics.push()
   love.graphics.translate(cx, cy)
-  love.graphics.translate(-love.graphics.getWidth() / 2, -self.screen.y)
+  love.graphics.translate(-love.graphics.getWidth() / 4, -self.screen.y)
   self.player:draw()
   for i = 1, #Platforms do
     Platforms[i].sprite:draw()
