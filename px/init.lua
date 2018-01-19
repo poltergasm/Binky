@@ -42,6 +42,11 @@ function px.Game(title, mod, width, height, loader)
   end
 end
 
+function px.change_mod(mod)
+  if mod.init then mod:init() end
+  px.current_mod = mod
+end
+
 function px.Print(...) gr.print(...) end
 
 return px

@@ -4,9 +4,11 @@ local floor = math.floor
 EntityPlayer   = require "entities.player"
 EntityPlatform = require "entities.platform"
 EntityCoin     = require "entities.coin"
+EntityGoal     = require "entities.goal"
 -- main game scene
 Platforms = {}
 Coins = {}
+Goal = nil
 
 MainGame = px.Module:extends()
 
@@ -60,6 +62,17 @@ function MainGame:load_map()
     end
   end
 
+  -- add goal
+  local last_y = #self.map * 48
+  local last_x = 4*48
+  local platform = EntityPlatform(last_x, last_y, true)
+  Platforms[#Platforms + 1] = platform
+
+  platform = EntityPlatform(last_x+48, last_y, true)
+  Platforms[#Platforms + 1] = platform
+
+  Goal = EntityGoal(last_x, last_y-64)
+
   -- coins
   for i = 1, 50 do
     local trow  = math.ceil((math.random() * #self.map))
@@ -76,11 +89,13 @@ function MainGame:load_map()
   end
 end
 
+local music
+
 function MainGame:init()
   math.randomseed(os.time())
   self.font = love.graphics.newFont("assets/fonts/Gamer.ttf", 34)
   love.graphics.setFont(self.font)
-  local music = love.audio.newSource("assets/audio/bgm/Happy.mp3", true)
+  music = love.audio.newSource("assets/audio/bgm/Happy.mp3", true)
   music:setVolume(0.3)
   music:play()
   love.graphics.setBackgroundColor(69, 186, 230)
@@ -100,6 +115,7 @@ local zoom = 1
 function MainGame:update(dt)
   self.player:update(dt)
   for i = 1, #Coins do Coins[i]:update(dt) end
+  Goal:update(dt)
   self.speed = self.speed + dt * (10/self.speed)
   self.screen.y = self.screen.y + dt * self.speed
 
@@ -143,7 +159,37 @@ function MainGame:draw()
   end
 
   for i = 1, #Coins do Coins[i].sprite:draw() end
+  Goal.sprite:draw()
   love.graphics.pop()
+end
+
+LevelPassed = px.Module:extends()
+
+function LevelPassed:init()
+  Platforms = {}
+  Coins = {}
+  love.graphics.setBackgroundColor(69, 186, 230)
+  self.font = love.graphics.newFont("assets/fonts/Gamer.ttf", 50)
+  love.graphics.setFont(self.font)
+end
+
+function LevelPassed:draw()
+  love.graphics.push()
+  love.graphics.scale(4, 4)
+  love.graphics.draw(atlas, backdrop, 0, 80)
+  love.graphics.pop()
+  love.graphics.setColor(220, 20, 60)
+  local fonth = self.font:getHeight()
+  love.graphics.print("Level passed!", love.graphics.getWidth() / 3, love.graphics.getHeight() / 3)
+  love.graphics.print("Press R to play again", love.graphics.getWidth() / 5, love.graphics.getHeight() / 3 + fonth)
+  love.graphics.setColor(255, 255, 255)
+end
+
+function LevelPassed:update(dt)
+  if px.Keyboard:key_down("r") then
+    music:stop()
+    px.change_mod(MainGame)
+  end
 end
 
 -- @args (title, module, width, height, loader)
