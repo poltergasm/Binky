@@ -1,10 +1,12 @@
 local px = require "px"
-
+local floor = math.floor
 -- create entity player
-EntityPlayer = require "entities.player"
+EntityPlayer   = require "entities.player"
 EntityPlatform = require "entities.platform"
+EntityCoin     = require "entities.coin"
 -- main game scene
 Platforms = {}
+Coins = {}
 
 MainGame = px.Module:extends()
 
@@ -25,17 +27,21 @@ function MainGame:get_row()
   return row
 end
 
+local atlas = love.graphics.newImage("assets/gfx/binky.png")
+atlas:setFilter("nearest", "nearest")
+local backdrop = love.graphics.newQuad(0, 192, 160, 144, atlas:getDimensions())
+
 function MainGame:load_map()
-  self.map = {0,0,0,0,0,0,0,0},
+  self.map = {{0,0,0,0,0,0,0,0},
               {0,0,0,0,0,0,0,0},
               {0,0,0,0,0,0,0,0},
               {0,0,0,0,0,0,0,0},
               {0,0,0,1,1,0,0,0},
               {0,0,0,0,0,0,0,0},
               {0,0,0,0,0,0,0,0},
-              {0,0,0,0,0,0,0,0}
+              {0,0,0,0,0,0,0,0}}
     
-  for i = 8, 18 do
+  for i = 8, 70 do
     self.map[i] = self:get_row()
   end
   
@@ -44,70 +50,99 @@ function MainGame:load_map()
     if type(row) == "table" then
       for j,n in ipairs(row) do
         if n == 1 then
-          local platform = EntityPlatform((j-1)*32, (i-1)*32)
+          local platform = EntityPlatform((j-1)*48, (i-1)*48)
           Platforms[#Platforms + 1] = platform
         end
       end
     else
-      local platform = EntityPlatform((i-1)*32, (row-1)*32)
+      local platform = EntityPlatform((i-1)*48, (row-1)*48)
       Platforms[#Platforms + 1] = platform
+    end
+  end
+
+  -- coins
+  for i = 1, 50 do
+    local trow  = math.ceil((math.random() * #self.map))
+    local tile = math.ceil((math.random() * 8))
+    --if type(self.map[trow]) == "table" then
+      if self.map[trow][tile] == 1 and self.map[trow-2][tile] == 0 then
+        print("Planted coin")
+        local y = (trow-2)*48
+        local x = (tile-1)*48
+        local coin = EntityCoin(x, y)
+        Coins[#Coins + 1] = coin
+      --end
     end
   end
 end
 
 function MainGame:init()
   math.randomseed(os.time())
+  self.font = love.graphics.newFont("assets/fonts/Gamer.ttf", 34)
+  love.graphics.setFont(self.font)
   local music = love.audio.newSource("assets/audio/bgm/Happy.mp3", true)
+  music:setVolume(0.3)
   music:play()
   love.graphics.setBackgroundColor(69, 186, 230)
-  self.player = EntityPlayer()
-  self.player.sprite.pos.x = 150
+  self.player = EntityPlayer(self)
+  self.player.sprite.pos.x = 115
   self.player.sprite.pos.y = -50
   self.speed = 1
   self.screen = {}
   self.screen.y = 0
   self.screen.x = 0
+  self.points = 0
   self:load_map()
 end
 
 local zoom = 1
+
 function MainGame:update(dt)
   self.player:update(dt)
+  for i = 1, #Coins do Coins[i]:update(dt) end
   self.speed = self.speed + dt * (10/self.speed)
   self.screen.y = self.screen.y + dt * self.speed
 
   -- new row?
   --local need_row = self.screen.y % 400
-  print(math.floor(self.screen.y) % 400)
-  if false then
-    --self.screen.y = self.screen.y - 8
-    --for i = 1, #Platforms do
-    --  Platforms[i].pos.y = Platforms[i].pos.y + 8
-    --end
 
-    for i = 1, 8 do
-      table.remove(Platforms, i)
-    end
+  --[[if self.screen.y > 180 then
+    --self.screen.y = self.screen.y - 8
+    --self.player.sprite.pos.y = self.player.sprite.pos.y - 8
+    
     table.remove(self.map, 1)
     local map_y = #self.map + 1
     self.map[map_y] = self:get_row()
     self:add_platform_row(map_y, self.map[map_y])
 
     -- place coin?
-  end
+  end]]
+
+  self.points = self.points + dt * self.speed
 end
 
 function MainGame:draw()
-  px.Print("Plixel Works!", 100, 100)
+  love.graphics.push()
+  love.graphics.scale(4, 4)
+  love.graphics.draw(atlas, backdrop, 0, 80)
+  love.graphics.pop()
+  local pts = floor(self.points)
+  love.graphics.setColor(220, 20, 60)
+  local fontw = self.font:getWidth(pts)
+  local fonth = self.font:getHeight(pts)
+  px.Print(floor(pts), love.graphics.getWidth() - (fontw + 30), fonth + 10)
+  love.graphics.setColor(255, 255, 255, 255)
 
   local cx,cy = love.graphics.getWidth()/(2*zoom), love.graphics.getHeight()/(2*zoom)
   love.graphics.push()
   love.graphics.translate(cx, cy)
-  love.graphics.translate(-love.graphics.getWidth() / 4, -self.screen.y)
+  love.graphics.translate(-love.graphics.getWidth() / 4, -self.screen.y * (self.speed / 4))
   self.player:draw()
   for i = 1, #Platforms do
     Platforms[i].sprite:draw()
   end
+
+  for i = 1, #Coins do Coins[i].sprite:draw() end
   love.graphics.pop()
 end
 
