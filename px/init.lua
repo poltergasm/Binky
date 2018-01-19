@@ -4,7 +4,7 @@ px.Events = require("px.events")()
 px.Keyboard = require "px.keyboard"
 px.Module = require "px.module"
 px.Entity = require "px.entity"
-px.Sprite = require "px.Sprite"
+px.Sprite = require "px.sprite"
 px.Anim   = require "px.animation"
 px.Physics = require "px.physics"
 
