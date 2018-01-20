@@ -90,7 +90,7 @@ function EntityPlayer:update(dt)
   if touchgoal ~= nil then
     px.change_mod(LevelPassed)
   end
-
+  
   if self.grounded then self.vel.y = 0 end
 
   self.sprite.pos.x = self.sprite.pos.x + self.vel.x

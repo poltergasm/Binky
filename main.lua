@@ -10,6 +10,12 @@ Platforms = {}
 Coins = {}
 Goal = nil
 
+local music
+local zoom = 1
+local atlas = love.graphics.newImage("assets/gfx/binky.png")
+atlas:setFilter("nearest", "nearest")
+local backdrop = love.graphics.newQuad(0, 192, 160, 144, atlas:getDimensions())
+
 MainGame = px.Module:extends()
 
 function MainGame:add_platform_row(y, row)
@@ -28,10 +34,6 @@ function MainGame:get_row()
   end
   return row
 end
-
-local atlas = love.graphics.newImage("assets/gfx/binky.png")
-atlas:setFilter("nearest", "nearest")
-local backdrop = love.graphics.newQuad(0, 192, 160, 144, atlas:getDimensions())
 
 function MainGame:load_map()
   self.map = {{0,0,0,0,0,0,0,0},
@@ -89,8 +91,6 @@ function MainGame:load_map()
   end
 end
 
-local music
-
 function MainGame:init()
   math.randomseed(os.time())
   self.font = love.graphics.newFont("assets/fonts/Gamer.ttf", 34)
@@ -109,8 +109,6 @@ function MainGame:init()
   self.points = 0
   self:load_map()
 end
-
-local zoom = 1
 
 function MainGame:update(dt)
   self.player:update(dt)
@@ -146,7 +144,7 @@ function MainGame:draw()
   love.graphics.setColor(220, 20, 60)
   local fontw = self.font:getWidth(pts)
   local fonth = self.font:getHeight(pts)
-  px.Print(floor(pts), love.graphics.getWidth() - (fontw + 30), fonth + 10)
+  px.Print(pts, love.graphics.getWidth() - (fontw + 30), fonth + 10)
   love.graphics.setColor(255, 255, 255, 255)
 
   local cx,cy = love.graphics.getWidth()/(2*zoom), love.graphics.getHeight()/(2*zoom)
