@@ -14,7 +14,7 @@ local music
 local zoom = 1
 local atlas = love.graphics.newImage("assets/gfx/binky.png")
 atlas:setFilter("nearest", "nearest")
-local backdrop = love.graphics.newQuad(0, 192, 160, 144, atlas:getDimensions())
+local backdrop = love.graphics.newQuad(0, 384, 320, 288, atlas:getDimensions())
 
 MainGame = px.Module:extends()
 
@@ -54,26 +54,26 @@ function MainGame:load_map()
     if type(row) == "table" then
       for j,n in ipairs(row) do
         if n == 1 then
-          local platform = EntityPlatform((j-1)*48, (i-1)*48)
+          local platform = EntityPlatform((j-1)*32, (i-1)*32)
           Platforms[#Platforms + 1] = platform
         end
       end
     else
-      local platform = EntityPlatform((i-1)*48, (row-1)*48)
+      local platform = EntityPlatform((i-1)*32, (row-1)*32)
       Platforms[#Platforms + 1] = platform
     end
   end
 
   -- add goal
-  local last_y = #self.map * 48
-  local last_x = 4*48
-  local platform = EntityPlatform(last_x, last_y, true)
+  local last_y = #self.map * 32
+  local last_x = 4*32
+  local platform = EntityPlatform(last_x, last_y+64)
   Platforms[#Platforms + 1] = platform
 
-  platform = EntityPlatform(last_x+48, last_y, true)
+  platform = EntityPlatform(last_x+32, last_y+64)
   Platforms[#Platforms + 1] = platform
 
-  Goal = EntityGoal(last_x, last_y-64)
+  Goal = EntityGoal(last_x, last_y+32)
 
   -- coins
   for i = 1, 50 do
@@ -81,9 +81,8 @@ function MainGame:load_map()
     local tile = math.ceil((math.random() * 8))
     --if type(self.map[trow]) == "table" then
       if self.map[trow][tile] == 1 and self.map[trow-2][tile] == 0 then
-        print("Planted coin")
-        local y = (trow-2)*48
-        local x = (tile-1)*48
+        local y = (trow-2)*32
+        local x = (tile-1)*32
         local coin = EntityCoin(x, y)
         Coins[#Coins + 1] = coin
       --end
@@ -136,10 +135,10 @@ function MainGame:update(dt)
 end
 
 function MainGame:draw()
-  love.graphics.push()
-  love.graphics.scale(4, 4)
-  love.graphics.draw(atlas, backdrop, 0, 80)
-  love.graphics.pop()
+
+  local bdy = love.graphics.getHeight() - 220
+  love.graphics.draw(atlas, backdrop, 0, bdy)
+  love.graphics.draw(atlas, backdrop, 320, bdy)
   local pts = floor(self.points)
   love.graphics.setColor(220, 20, 60)
   local fontw = self.font:getWidth(pts)
@@ -172,10 +171,9 @@ function LevelPassed:init()
 end
 
 function LevelPassed:draw()
-  love.graphics.push()
-  love.graphics.scale(4, 4)
-  love.graphics.draw(atlas, backdrop, 0, 80)
-  love.graphics.pop()
+  local bdy = love.graphics.getHeight() - 220
+  love.graphics.draw(atlas, backdrop, 0, bdy)
+  love.graphics.draw(atlas, backdrop, 320, bdy)
   love.graphics.setColor(220, 20, 60)
   local fonth = self.font:getHeight()
   love.graphics.print("Level passed!", love.graphics.getWidth() / 3, love.graphics.getHeight() / 3)

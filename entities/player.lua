@@ -13,14 +13,14 @@ local snd = {
 function EntityPlayer:init(game)
   EntityPlayer.super:init()
 
-  local idle = px.Anim(16, 16, 16, 16, {1, 2, 3, 4}, 4, 6)
-  local walk = px.Anim(16, 32, 16, 16, {1, 2, 3, 4, 5, 6}, 6, 12)
-  local swim = px.Anim(16, 64, 16, 16, {1, 2, 3, 4, 5, 6}, 6, 12)
-  local punch = px.Anim(16, 80, 16, 16, {1, 2, 3}, 3, 10, false)
-  local jump  = px.Anim(16, 48, 16, 16, {1, 2, 3}, 6, 6, false)
+  local idle = px.Anim(32, 32, 32, 32, {1, 2, 3, 4}, 4, 6)
+  local walk = px.Anim(32, 64, 32, 32, {1, 2, 3, 4, 5, 6}, 6, 12)
+  local swim = px.Anim(32, 64, 32, 32, {1, 2, 3, 4, 5, 6}, 6, 12)
+  local punch = px.Anim(32, 80, 32, 32, {1, 2, 3}, 3, 10, false)
+  local jump  = px.Anim(32, 64, 32, 32, {1, 2, 3}, 6, 6, false)
 
   atlas:setFilter("nearest", "nearest")
-  self.sprite = px.Sprite(atlas, 16, 16, 200, 200, 3, 3)
+  self.sprite = px.Sprite(atlas, 28, 32, 200, 200)
   self.sprite:add_animations({
     idle = idle, walk = walk, swim = swim, punch = punch, jump = jump
   })
@@ -30,12 +30,12 @@ function EntityPlayer:init(game)
   self.game = game
 end
 
-function EntityPlayer:jump()
+function EntityPlayer:jump(dt)
   if not self.jumping and self.grounded then
     snd.jump3:play()
     self.jumping = true
     self.grounded = false
-    self.vel.y = -5
+    self.vel.y = self.vel.y - 5
     self.sprite:animate("jump")
   end
 end
@@ -44,7 +44,7 @@ function EntityPlayer:update(dt)
   EntityPlayer.super.update(self, dt)
 
   if px.Keyboard:key_down("x") then
-    self:jump()
+    self:jump(dt)
   elseif px.Keyboard:key_down("right") and not px.Keyboard:key_down("left") then
     self.sprite:flip_h(false)
     self.sprite:animate("walk")
@@ -61,7 +61,8 @@ function EntityPlayer:update(dt)
     self.sprite:animate("idle")
   end
 
-  self.vel.x = self.vel.x * self.friction
+  -- self.Transform.x + self.vx * 115 * dt
+  self.vel.x = self.vel.x * 0.9
   self.vel.y = self.vel.y + self.gravity
 
   self.grounded = false
